@@ -7,10 +7,7 @@ from .messages import help_messages
 
 class Mylist(list):
     def next(self, index: int):
-        if index < self.__len__()-1:
-            return self[index+1]
-        else:
-            return ""
+        return self[index+1] if index < self.__len__()-1 else ""
 
 
 def help_message(args: str):
@@ -21,10 +18,7 @@ def help_message(args: str):
 
 
 def dhr(t, o):
-    if t == 0 and o == 0:
-        return 100
-    else:
-        return t*10+o
+    return 100 if t == 0 and o == 0 else t*10+o
 
 
 def st():
@@ -52,12 +46,11 @@ def en(arg: str) -> str:
     except ValueError:
         return help_messages.en
     check = random.randint(1, 100)
-    if check > arg or check > 95:
-        plus = random.randint(1, 10)
-        r = "判定值%d，判定成功，技能成长%d+%d=%d" % (check, arg, plus, arg+plus)
-        return r + "\n温馨提示：如果技能提高到90%或更高，增加2D6理智点数。"
-    else:
+    if check <= arg and check <= 95:
         return "判定值%d，判定失败，技能无成长。" % check
+    plus = random.randint(1, 10)
+    r = "判定值%d，判定成功，技能成长%d+%d=%d" % (check, arg, plus, arg+plus)
+    return r + "\n温馨提示：如果技能提高到90%或更高，增加2D6理智点数。"
 
 
 def expr(d: diro.Diro, anum: Optional[int]) -> str:
@@ -95,7 +88,7 @@ def rd0(arg: str) -> str:
             except:
                 pass
         anum: Optional[int] = None
-        if len(args) > 0:
+        if args:
             try:
                 anum = int(args[0])
             except ValueError:

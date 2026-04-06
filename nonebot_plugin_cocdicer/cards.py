@@ -17,10 +17,7 @@ _cachepath = os.path.join("data", "coc_cards.json")
 
 
 def get_group_id(event: MessageEvent):
-    if type(event) is GroupMessageEvent:
-        return str(event.group_id)
-    else:
-        return "0"
+    return str(event.group_id) if type(event) is GroupMessageEvent else "0"
 
 
 class Cards():
@@ -91,21 +88,12 @@ attrs_dict: Dict[str, List[str]] = {
 
 
 def set_handler(event: MessageEvent, args: str):
-    if not args:
-        if cache_cards.get(event):
-            card_data = cache_cards.get(event)
-            cards.update(event, inv_dict=card_data)
-            inv = Investigator().load(card_data)
-            return "成功从缓存保存人物卡属性：\n" + inv.output()
-        else:
-            return "未找到缓存数据，请先使用coc指令生成角色"
-    else:
+    if args:
         args = args.split(" ")
-        if cards.get(event):
-            card_data = cards.get(event)
-            inv = Investigator().load(card_data)
-        else:
+        if not cards.get(event):
             return "未找到已保存数据，请先使用空白set指令保存角色数据"
+        card_data = cards.get(event)
+        inv = Investigator().load(card_data)
         if len(args) >= 2:
             for attr, alias in attrs_dict.items():
                 if args[0] in alias:
@@ -117,13 +105,21 @@ def set_handler(event: MessageEvent, args: str):
                         except ValueError:
                             return "请输入正整数属性数据"
                     cards.update(event, inv.__dict__)
-                    return "设置调查员%s为：%s" % (attr, args[1])
+                    return f"设置调查员{attr}为：{args[1]}"
             try:
                 inv.skills[args[0]] = int(args[1])
                 cards.update(event, inv.__dict__)
-                return "设置调查员%s技能为：%s" % (args[0], args[1])
+                return f"设置调查员{args[0]}技能为：{args[1]}"
             except ValueError:
                 return "请输入正整数技能数据"
+
+    elif cache_cards.get(event):
+        card_data = cache_cards.get(event)
+        cards.update(event, inv_dict=card_data)
+        inv = Investigator().load(card_data)
+        return "成功从缓存保存人物卡属性：\n" + inv.output()
+    else:
+        return "未找到缓存数据，请先使用coc指令生成角色"
 
 
 def show_handler(event: MessageEvent, args: str):
@@ -160,16 +156,15 @@ def del_handler(event: MessageEvent, args: str):
     args = args.split(" ")
     for arg in args:
         if not arg:
-            pass
-        elif arg == "c" and cache_cards.get(event):
+            continue
+        if arg == "c" and cache_cards.get(event):
             if cache_cards.delete(event, save=False):
                 r.append("已清空暂存人物卡数据")
         elif arg == "card" and cards.get(event):
             if cards.delete(event):
                 r.append("已删除使用中的人物卡！")
-        else:
-            if cards.delete_skill(event, arg):
-                r.append("已删除技能"+arg)
+        elif cards.delete_skill(event, arg):
+            r.append(f"已删除技能{arg}")
     if not r:
         r.append(help_messages.del_)
     return r
